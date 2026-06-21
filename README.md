@@ -5,6 +5,7 @@ Este tutorial mostra como criar e executar um projeto Python usando:
 * Docker;
 * Python 3.13;
 * `uv` como gerenciador de projeto, ambiente virtual e dependências;
+* `pytest` para testes automatizados;
 * `ruff` para lint de código.
 
 ---
@@ -65,7 +66,7 @@ docker images
 
 ## 3. Execução do container
 
-Execute o container montando a pasta atual dentro de `/workspace`:
+Execute o container:
 
 ```bash
 docker run --rm -it \
@@ -94,6 +95,8 @@ Saída esperada aproximada:
 Python 3.13.x
 uv x.y.z
 ```
+
+Observação: como este exemplo não monta uma pasta do computador dentro do container, os arquivos criados serão perdidos quando o container for encerrado. Para uma aula rápida isso é aceitável. Para preservar os arquivos, use volume com Docker.
 
 ---
 
@@ -291,7 +294,7 @@ O projeto deve continuar funcionando.
 
 ---
 
-## 10 Dependência de desenvolvimento com `pytest`
+## 10. Dependência de desenvolvimento com `pytest`
 
 Além das dependências necessárias para executar a aplicação, um projeto normalmente também possui dependências usadas apenas durante o desenvolvimento.
 
@@ -309,7 +312,7 @@ Essas dependências não fazem parte da aplicação em si. Elas são ferramentas
 
 Para adicionar o `pytest` ao projeto:
 
-```bash id="c0borf"
+```bash
 uv add --dev pytest
 ```
 
@@ -317,7 +320,7 @@ Esse comando adiciona o `pytest` ao grupo de desenvolvimento no `pyproject.toml`
 
 O arquivo ficará parecido com isto:
 
-```toml id="1j3i7b"
+```toml
 [dependency-groups]
 dev = [
     "pytest>=...",
@@ -330,13 +333,13 @@ dev = [
 
 Crie uma pasta chamada `tests`:
 
-```bash id="0xlj5c"
+```bash
 mkdir tests
 ```
 
 Agora crie o arquivo `tests/test_analise.py`:
 
-```bash id="oq9ikq"
+```bash
 cat > tests/test_analise.py <<'EOF'
 def test_media_simples():
     notas = [8.5, 7.0, 9.2]
@@ -352,13 +355,13 @@ EOF
 
 Para rodar os testes:
 
-```bash id="zlyo8z"
+```bash
 uv run pytest
 ```
 
 Saída esperada aproximada:
 
-```text id="zsbc96"
+```text
 ============================= test session starts =============================
 collected 1 item
 
@@ -371,7 +374,7 @@ tests/test_analise.py .                                             [100%]
 
 ### Executando os testes com mais detalhes
 
-```bash id="lezf97"
+```bash
 uv run pytest -v
 ```
 
@@ -379,7 +382,7 @@ uv run pytest -v
 
 ### Executando apenas um arquivo de teste
 
-```bash id="t5c0fe"
+```bash
 uv run pytest tests/test_analise.py
 ```
 
@@ -387,7 +390,7 @@ uv run pytest tests/test_analise.py
 
 ### Executando apenas um teste específico
 
-```bash id="qvaekv"
+```bash
 uv run pytest tests/test_analise.py::test_media_simples
 ```
 
@@ -399,7 +402,7 @@ Uma dependência normal é necessária para o programa funcionar.
 
 Exemplo:
 
-```bash id="2t33px"
+```bash
 uv add pandas
 ```
 
@@ -409,21 +412,11 @@ Uma dependência de desenvolvimento é necessária apenas para desenvolver, test
 
 Exemplo:
 
-```bash id="8q0s0k"
+```bash
 uv add --dev pytest
 ```
 
 Nesse caso, `pytest` é usado para testar o projeto, mas não faz parte da lógica principal da aplicação.
-
----
-
-### Verificando a árvore de dependências incluindo desenvolvimento
-
-```bash id="9d3wqy"
-uv tree
-```
-
-A árvore deve mostrar o projeto, suas dependências principais e também as dependências do grupo de desenvolvimento.
 
 ---
 
@@ -433,7 +426,7 @@ Em alguns cenários, como produção, você pode querer instalar apenas as depen
 
 Para isso:
 
-```bash id="1o4uq6"
+```bash
 uv sync --no-dev
 ```
 
@@ -441,13 +434,13 @@ Nesse caso, o `pytest` não será instalado.
 
 Para voltar ao ambiente completo de desenvolvimento:
 
-```bash id="2nkn1q"
+```bash
 uv sync
 ```
 
 Como o grupo `dev` é sincronizado por padrão, o `pytest` volta a estar disponível.
 
-
+---
 
 ## 11. Visualizando dependências com `uv tree`
 
@@ -463,11 +456,16 @@ Exemplo aproximado:
 
 ```text
 meu-projeto v0.1.0
-└── pandas v...
-    ├── numpy v...
-    ├── python-dateutil v...
-    ├── pytz v...
-    └── tzdata v...
+├── pandas v...
+│   ├── numpy v...
+│   ├── python-dateutil v...
+│   ├── pytz v...
+│   └── tzdata v...
+└── pytest v...
+    ├── iniconfig v...
+    ├── packaging v...
+    ├── pluggy v...
+    └── pygments v...
 ```
 
 Mesmo depois de remover `numpy` como dependência direta, ele pode continuar aparecendo na árvore porque `pandas` depende de `numpy`.
@@ -475,11 +473,12 @@ Mesmo depois de remover `numpy` como dependência direta, ele pode continuar apa
 Essa é uma boa diferença para explicar em aula:
 
 * dependência direta: você adicionou explicitamente com `uv add`;
-* dependência transitiva: outro pacote precisa dela para funcionar.
+* dependência transitiva: outro pacote precisa dela para funcionar;
+* dependência de desenvolvimento: ferramenta usada no desenvolvimento, como `pytest` ou `ruff`.
 
 ---
 
-## 11. Criando ambiente virtual com `uv venv`
+## 12. Criando ambiente virtual com `uv venv`
 
 O `uv` normalmente cria e gerencia o `.venv` automaticamente quando usamos comandos como:
 
@@ -524,7 +523,7 @@ uv run analise.py
 
 ---
 
-## 12. Listando versões de Python com `uv python list`
+## 13. Listando versões de Python com `uv python list`
 
 O `uv` também consegue localizar e gerenciar versões de Python.
 
@@ -534,7 +533,7 @@ Para listar versões disponíveis e instaladas:
 uv python list
 ```
 
-A saída pode mostrar versões instaladas localmente e versões que o `uv consegue baixar.
+A saída pode mostrar versões instaladas localmente e versões que o `uv` consegue baixar.
 
 Exemplo aproximado:
 
@@ -549,7 +548,7 @@ Dentro do nosso container, a versão principal esperada é Python 3.13, porque a
 
 ---
 
-## 13. Encontrando o interpretador com `uv python find`
+## 14. Encontrando o interpretador com `uv python find`
 
 Para encontrar o caminho do Python que será usado:
 
@@ -579,7 +578,7 @@ Esse comando é útil para entender qual interpretador Python está sendo usado 
 
 ---
 
-## 14. Usando lint de código com Ruff
+## 15. Usando lint de código com Ruff
 
 Agora vamos usar lint para encontrar problemas no código.
 
@@ -629,9 +628,265 @@ uv run ruff format .
 
 ---
 
-## 15. Conferindo os arquivos do projeto
+## 16. Executando ferramentas temporárias com `uvx`
 
-Depois dos comandos anteriores, a estrutura do projeto deve estar parecida com esta:
+O `uvx` permite executar ferramentas Python em ambientes temporários e isolados.
+
+Isso é útil quando você quer usar uma ferramenta uma vez, sem adicioná-la como dependência do projeto.
+
+Exemplo:
+
+```bash
+uvx pycowsay "Olá, turma!"
+```
+
+Outro exemplo com `ruff`:
+
+```bash
+uvx ruff check .
+```
+
+Diferença importante:
+
+```bash
+uvx ruff check .
+```
+
+Executa o `ruff` temporariamente, sem registrar a ferramenta no projeto.
+
+```bash
+uv add --dev ruff
+uv run ruff check .
+```
+
+Registra o `ruff` como dependência de desenvolvimento do projeto.
+
+Em projetos reais, prefira `uv add --dev ruff` quando a ferramenta fizer parte do fluxo oficial do projeto.
+
+Use `uvx` quando quiser apenas testar ou executar uma ferramenta pontualmente.
+
+---
+
+## 17. Dependências inline em scripts Python
+
+Nem todo código Python precisa virar um projeto completo.
+
+O `uv` também permite declarar dependências diretamente dentro de um único arquivo Python.
+
+Esse recurso é útil para:
+
+* automações pequenas;
+* scripts de demonstração;
+* exemplos isolados;
+* tarefas rápidas.
+
+Volte para o diretório anterior:
+
+```bash
+cd ..
+```
+
+Crie um script simples:
+
+```bash
+cat > script_inline.py <<'EOF'
+import rich
+
+rich.print("[bold green]Olá usando dependência inline com uv![/bold green]")
+EOF
+```
+
+Se você executar diretamente, pode dar erro porque `rich` ainda não está instalado nesse script:
+
+```bash
+uv run --no-project script_inline.py
+```
+
+Erro esperado aproximado:
+
+```text
+ModuleNotFoundError: No module named 'rich'
+```
+
+Agora adicione a dependência diretamente ao script:
+
+```bash
+uv add --script script_inline.py rich
+```
+
+O `uv` vai alterar o próprio arquivo `script_inline.py`, adicionando metadados no topo.
+
+O arquivo ficará parecido com isto:
+
+```python
+# /// script
+# dependencies = [
+#   "rich",
+# ]
+# ///
+
+import rich
+
+rich.print("[bold green]Olá usando dependência inline com uv![/bold green]")
+```
+
+Agora execute:
+
+```bash
+uv run script_inline.py
+```
+
+Dessa vez o `uv` lê os metadados do próprio script, cria um ambiente temporário adequado e instala a dependência necessária.
+
+Também é possível fixar uma versão:
+
+```bash
+uv add --script script_inline.py "rich>=13,<14"
+```
+
+Quando usar esse recurso:
+
+* use dependências inline para scripts pequenos e independentes;
+* use `uv init` quando o código virar um projeto;
+* use `pyproject.toml` quando houver vários arquivos, testes, lint, build ou colaboração com outras pessoas.
+
+Volte para o projeto principal:
+
+```bash
+cd meu-projeto
+```
+
+---
+
+## 18. Exportando dependências para `requirements.txt`
+
+Mesmo usando `uv`, você pode encontrar ferramentas legadas que esperam um arquivo `requirements.txt`.
+
+Para exportar as dependências do projeto:
+
+```bash
+uv export --format requirements.txt --output-file requirements.txt
+```
+
+Confira o arquivo gerado:
+
+```bash
+cat requirements.txt
+```
+
+O arquivo `requirements.txt` gerado pode ser usado por ferramentas que ainda trabalham com `pip`.
+
+Exemplo:
+
+```bash
+pip install -r requirements.txt
+```
+
+Atenção: em projetos que usam `uv`, o arquivo principal de controle de dependências deve continuar sendo o `pyproject.toml` junto com o `uv.lock`.
+
+O `requirements.txt` deve ser visto como uma exportação para compatibilidade.
+
+Em geral, evite manter `uv.lock` e `requirements.txt` como duas fontes manuais de verdade. Se precisar de `requirements.txt`, gere-o novamente a partir do `uv`.
+
+---
+
+## 19. Build de pacote Python com `uv build`
+
+Até aqui, criamos um projeto com:
+
+```bash
+uv init meu-projeto
+```
+
+Esse formato é adequado para aplicações simples, scripts, APIs e experimentos.
+
+Para demonstrar build de pacote, vamos criar um segundo projeto, próprio para empacotamento.
+
+Volte para o diretório anterior:
+
+```bash
+cd ..
+```
+
+Crie uma aplicação empacotável:
+
+```bash
+uv init --package meu-pacote
+cd meu-pacote
+```
+
+A estrutura será parecida com esta:
+
+```text
+meu-pacote/
+├── .python-version
+├── README.md
+├── pyproject.toml
+└── src/
+    └── meu_pacote/
+        └── __init__.py
+```
+
+Execute o comando criado pelo projeto:
+
+```bash
+uv run meu-pacote
+```
+
+Saída esperada aproximada:
+
+```text
+Hello from meu-pacote!
+```
+
+Agora gere os artefatos de distribuição:
+
+```bash
+uv build
+```
+
+O resultado será criado na pasta `dist/`.
+
+Confira:
+
+```bash
+ls -la dist
+```
+
+Saída esperada aproximada:
+
+```text
+meu_pacote-0.1.0-py3-none-any.whl
+meu_pacote-0.1.0.tar.gz
+```
+
+Esses arquivos são:
+
+* `.whl`: pacote binário Python, usado para instalação mais rápida;
+* `.tar.gz`: distribuição fonte do projeto.
+
+Antes de gerar um build em um projeto real, rode:
+
+```bash
+uv sync
+uv run pytest
+uv run ruff check .
+uv build
+```
+
+Observação: neste projeto `meu-pacote`, ainda não instalamos `pytest` nem `ruff`. Esses comandos representam o fluxo recomendado quando o projeto já possui testes e lint configurados.
+
+Volte para o projeto principal, se quiser continuar o tutorial anterior:
+
+```bash
+cd ../meu-projeto
+```
+
+---
+
+## 20. Conferindo os arquivos do projeto principal
+
+Depois dos comandos anteriores, a estrutura do projeto principal deve estar parecida com esta:
 
 ```text
 meu-projeto/
@@ -641,6 +896,9 @@ meu-projeto/
 ├── analise.py
 ├── main.py
 ├── pyproject.toml
+├── requirements.txt
+├── tests/
+│   └── test_analise.py
 └── uv.lock
 ```
 
@@ -659,6 +917,7 @@ dependencies = [
 
 [dependency-groups]
 dev = [
+    "pytest>=...",
     "ruff>=...",
 ]
 ```
@@ -667,35 +926,44 @@ O arquivo `uv.lock` registra as versões exatas resolvidas pelo `uv`.
 
 ---
 
-## 16. Resumo dos comandos usados
+## 21. Resumo dos comandos usados
 
-| Etapa                         | Comando                                                                                    |
-| ----------------------------- | ------------------------------------------------------------------------------------------ |
-| Build da imagem Docker        | `docker build -t python-uv-lab .`                                                          |
-| Rodar container               | `docker run --rm -it --name uv-lab -v "$PWD":/workspace -v /workspace/.venv python-uv-lab` |
-| Criar projeto                 | `uv init meu-projeto`                                                                      |
-| Executar script               | `uv run analise.py`                                                                        |
-| Adicionar dependências        | `uv add pandas numpy`                                                                      |
-| Remover dependência           | `uv remove numpy`                                                                          |
-| Sincronizar ambiente          | `uv sync`                                                                                  |
-| Ver árvore de dependências    | `uv tree`                                                                                  |
-| Criar ambiente virtual        | `uv venv --python 3.13`                                                                    |
-| Listar versões de Python      | `uv python list`                                                                           |
-| Encontrar Python usado        | `uv python find`                                                                           |
-| Adicionar Ruff                | `uv add --dev ruff`                                                                        |
-| Rodar lint                    | `uv run ruff check .`                                                                      |
-| Corrigir lint automaticamente | `uv run ruff check . --fix`                                                                |
-| Formatar código               | `uv run ruff format .`                                                                     |
+| Etapa                                 | Comando                                                              |
+| ------------------------------------- | -------------------------------------------------------------------- |
+| Build da imagem Docker                | `docker build -t python-uv-lab .`                                    |
+| Rodar container                       | `docker run --rm -it --name uv-lab python-uv-lab`                    |
+| Criar projeto                         | `uv init meu-projeto`                                                |
+| Executar script                       | `uv run analise.py`                                                  |
+| Adicionar dependências                | `uv add pandas numpy`                                                |
+| Remover dependência                   | `uv remove numpy`                                                    |
+| Sincronizar ambiente                  | `uv sync`                                                            |
+| Adicionar pytest como dependência dev | `uv add --dev pytest`                                                |
+| Rodar testes                          | `uv run pytest`                                                      |
+| Ver árvore de dependências            | `uv tree`                                                            |
+| Criar ambiente virtual                | `uv venv --python 3.13`                                              |
+| Listar versões de Python              | `uv python list`                                                     |
+| Encontrar Python usado                | `uv python find`                                                     |
+| Adicionar Ruff                        | `uv add --dev ruff`                                                  |
+| Rodar lint                            | `uv run ruff check .`                                                |
+| Corrigir lint automaticamente         | `uv run ruff check . --fix`                                          |
+| Formatar código                       | `uv run ruff format .`                                               |
+| Executar ferramenta temporária        | `uvx pycowsay "Olá, turma!"`                                         |
+| Adicionar dependência inline          | `uv add --script script_inline.py rich`                              |
+| Executar script inline                | `uv run script_inline.py`                                            |
+| Exportar requirements                 | `uv export --format requirements.txt --output-file requirements.txt` |
+| Criar projeto empacotável             | `uv init --package meu-pacote`                                       |
+| Gerar build de pacote                 | `uv build`                                                           |
 
 ---
 
-## 17. Fluxo final recomendado
+## 22. Fluxo final recomendado
 
 Em um projeto real, o ciclo mais comum seria:
 
 ```bash
 uv sync
 uv run analise.py
+uv run pytest
 uv run ruff check .
 uv run ruff format .
 uv tree
@@ -705,9 +973,19 @@ Antes de enviar o projeto para outra pessoa:
 
 ```bash
 uv sync
+uv run pytest
 uv run ruff check .
 uv run ruff format .
 uv run analise.py
+```
+
+Antes de gerar um pacote distribuível:
+
+```bash
+uv sync
+uv run pytest
+uv run ruff check .
+uv build
 ```
 
 Arquivos que devem ser versionados no Git:
@@ -719,6 +997,7 @@ uv.lock
 README.md
 main.py
 analise.py
+tests/
 ```
 
 Arquivos que normalmente não devem ser versionados:
@@ -727,6 +1006,10 @@ Arquivos que normalmente não devem ser versionados:
 .venv/
 __pycache__/
 .ruff_cache/
+.pytest_cache/
+dist/
+*.egg-info/
+.env
 ```
 
 Exemplo de `.gitignore`:
@@ -739,4 +1022,19 @@ __pycache__/
 dist/
 *.egg-info/
 .env
+```
+
+---
+
+## 23. Próximos passos
+
+Depois deste tutorial, os próximos temas interessantes são:
+
+* usar Docker com volume para preservar os arquivos fora do container;
+* abrir o container pelo VS Code com a extensão Dev Containers;
+* criar um pipeline de CI com GitHub Actions;
+* publicar um pacote em um repositório como PyPI;
+* usar `uv lock --check` e `uv sync --frozen` em automações.
+
+```
 ```
