@@ -71,6 +71,7 @@ Execute o container:
 ```bash
 docker run --rm -it \
   --name uv-lab \
+  -v $(pwd)/workspace_uv:/workspace \
   python-uv-lab
 ```
 
